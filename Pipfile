@@ -8,3 +8,5 @@ pika = "*"
 loguru = "*"
 
 [dev-packages]
+black = "*"
+pyright = "*"
