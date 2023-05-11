@@ -1,34 +1,27 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=C0111,C0103,R0205
 import functools
+import json
 import logging
+import os
+import sys
 import threading
-import time, os, json, pathlib, base64, sys, traceback
+import traceback
 from random import randint
 from time import sleep
+import pika
 
-import pika, pandas as pd, sqlalchemy as sal
 from pika.exchange_type import ExchangeType
 from loguru import logger as lg
 
-cleanupfiles = os.getenv("cleanup", "True")
-app_env = os.getenv("app_env", "Dev")
-# rabbitmq_host = os.getenv('rabbitmq_host','localhost')
-rabbitmq_host = os.getenv("rabbitmq_host", "cluster.rke.natimark.com")
-# rabbitmq_port = int(os.getenv('rabbitmq_port','5672'))
-rabbitmq_port = int(os.getenv("rabbitmq_port", "32304"))
-rabbitmq_user = os.getenv("rabbitmq_user", "guest")
-rabbitmq_pass = os.getenv("rabbitmq_pass", "guest")
+cleanupfiles = os.getenv("CLEANUP", "True")
+app_env = os.getenv("APP_ENV", "Dev")
+rabbitmq_host = os.getenv("RABBITMQ_HOST", "localhost")
+rabbitmq_port = int(os.getenv("RABBITMQ_PORT", "5672"))
+rabbitmq_user = os.getenv("RABBITMQ_USER", "guest")
+rabbitmq_pass = os.getenv("RABBITMQ_PASS", "guest")
+rabbitmq_watchqueue = os.getenv("RABBITMQ_WATCHQUEUE", "start")
+rabbitmq_resultqueue = os.getenv("RABBITMQ_RESULTQUEUE", "finish")
 worker_threads = 4  ##this is the var i want to set for how many worker threads run
-
-# if os.name == 'posix':
-#     rabbitmq_watchqueue = os.getenv('rabbitmq_watchqueue','finish')
-#     rabbitmq_resultqueue = os.getenv('rabbitmq_resultqueue','')
-# else:
-#     rabbitmq_watchqueue = os.getenv('rabbitmq_watchqueue','start')
-#     rabbitmq_resultqueue = os.getenv('rabbitmq_resultqueue','finish')
-rabbitmq_watchqueue = os.getenv("rabbitmq_watchqueue", "start")
-rabbitmq_resultqueue = os.getenv("rabbitmq_resultqueue", "finish")
 
 
 def exception_handler(exctype, value, tb):
@@ -189,10 +182,8 @@ channel.queue_bind(
     exchange=rabbitmq_watchqueue,
     routing_key=rabbitmq_watchqueue,
 )
-# Note: prefetch is set to 1 here as an example only and to keep the number of threads created
-# to a reasonable amount. In production you will want to test with different prefetch values
-# to find which one provides the best performance and usability for your solution
-channel.basic_qos(prefetch_count=1)
+
+channel.basic_qos(prefetch_count=worker_threads)
 
 threads = []
 on_message_callback = functools.partial(on_message, args=(threads))

@@ -1,24 +1,18 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=C0111,C0103,R0205
-import functools
+import json
 import logging
-import threading
-import time, os, json, pathlib, base64, sys, traceback
-from random import randint
-from time import sleep
-
-import pika, pandas as pd, sqlalchemy as sal
-from pika.exchange_type import ExchangeType
+import os
+import pika
+import sys
+import traceback
 from loguru import logger as lg
 
-cleanupfiles = os.getenv("cleanup", "True")
-app_env = os.getenv("app_env", "Dev")
-# rabbitmq_host = os.getenv('rabbitmq_host','localhost')
-rabbitmq_host = os.getenv("rabbitmq_host", "cluster.rke.natimark.com")
-# rabbitmq_port = int(os.getenv('rabbitmq_port','5672'))
-rabbitmq_port = int(os.getenv("rabbitmq_port", "32304"))
-rabbitmq_user = os.getenv("rabbitmq_user", "guest")
-rabbitmq_pass = os.getenv("rabbitmq_pass", "guest")
+cleanupfiles = os.getenv("CLEANUP", "True")
+app_env = os.getenv("APP_ENV", "Dev")
+rabbitmq_host = os.getenv("RABBITMQ_HOST", "localhost")
+rabbitmq_port = int(os.getenv("RABBITMQ_PORT", "5672"))
+rabbitmq_user = os.getenv("RABBITMQ_USER", "guest")
+rabbitmq_pass = os.getenv("RABBITMQ_PASS", "guest")
 
 
 def exception_handler(exctype, value, tb):

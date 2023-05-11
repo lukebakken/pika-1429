@@ -10,3 +10,4 @@ loguru = "*"
 [dev-packages]
 black = "*"
 pyright = "*"
+pylint = "*"
